@@ -11,6 +11,22 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   config => {
     config.baseURL = localStorage.getItem('apiUrl') || 'http://localhost:7474'
+    // 如果 apiUrl 与当前页面 origin 不同，则为跨域，手动加 token 到 header
+    const apiUrl = config.baseURL
+    const pageOrigin = window.location.origin
+    if (apiUrl && !apiUrl.startsWith(pageOrigin)) {
+      // 假设 token 存在 cookie 或 localStorage
+      // 优先取 localStorage 的 token
+      let token = localStorage.getItem('sessionId')
+      if (!token) {
+        // 如果没有，尝试从 cookie 读取
+        const match = document.cookie.match(/(?:^|;\s*)sessionId=([^;]*)/)
+        if (match) token = match[1]
+      }
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
+    }
     return config
   },
   error => {
