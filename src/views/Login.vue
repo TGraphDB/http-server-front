@@ -3,10 +3,18 @@
     <div class="login-box">
       <div class="logo">
         <img src="../assets/graph-logo.svg" alt="TGraph Logo" class="graph-logo" />
-        <h1>TGraph</h1>
-        <p>图数据库管理系统</p>
+        <h1>TGraphDB</h1>
+        <p>时态图数据库管理系统</p>
       </div>
       <el-form :model="loginForm" :rules="rules" ref="loginFormRef" class="login-form">
+        <!-- 新增API地址输入框 -->
+        <el-form-item prop="apiUrl">
+          <el-input
+            v-model="loginForm.apiUrl"
+            placeholder="TGraphDB 地址 (如 http://localhost:7474)"
+            prefix-icon="Link"
+          />
+        </el-form-item>
         <el-form-item prop="username">
           <el-input 
             v-model="loginForm.username" 
@@ -41,7 +49,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { User, Lock } from '@element-plus/icons-vue'
+import { User, Lock, Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api'
@@ -51,12 +59,17 @@ const loginFormRef = ref(null)
 const loading = ref(false)
 
 const loginForm = reactive({
+  apiUrl: localStorage.getItem('apiUrl') || 'http://localhost:7474',
   username: '',
   password: '',
   rememberMe: true
 })
 
 const rules = {
+  apiUrl: [
+    { required: true, message: '请输入TGraphDB地址', trigger: 'blur' },
+    { pattern: /^http(s)?:\/\/.+/, message: '地址必须以http://或https://开头', trigger: 'blur' }
+  ],
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' }
   ],
@@ -67,13 +80,16 @@ const rules = {
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  
+
   try {
     await loginFormRef.value.validate()
     loading.value = true
-    
+
+    // 保存API地址到localStorage
+    localStorage.setItem('apiUrl', loginForm.apiUrl)
+
     const res = await userApi.login(loginForm)
-    
+
     // 登录成功后保存token和用户名
     localStorage.setItem('token', 'logged-in') // 用于前端判断是否已登录
     localStorage.setItem('username', loginForm.username) // 保存用户名用于过滤备份文件
@@ -142,4 +158,4 @@ const handleLogin = async () => {
   float: right;
   color: #1a237e;
 }
-</style> 
+</style>

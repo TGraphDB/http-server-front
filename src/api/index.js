@@ -1,17 +1,16 @@
 import axios from 'axios'
 
-const API_URL = 'http://localhost:7474'
-
 // 创建axios实例
 const apiClient = axios.create({
-  baseURL: API_URL,
+  // baseURL 先不设置，后续每次请求前动态设置
   timeout: 10000,
   withCredentials: true
 })
 
-// 请求拦截器，添加认证信息
+// 请求拦截器，动态设置baseURL
 apiClient.interceptors.request.use(
   config => {
+    config.baseURL = localStorage.getItem('apiUrl') || 'http://localhost:7474'
     return config
   },
   error => {
@@ -198,12 +197,16 @@ export const nodeApi = {
 }
 
 // 关系相关API
+function getApiUrl() {
+  return localStorage.getItem('apiUrl') || 'http://localhost:7474'
+}
+
 export const relationshipApi = {
   // 创建关系
   createRelationship(sourceNodeId, targetNodeId, type, properties) {
     // 构建符合API要求的请求数据
     const relationshipData = {
-      to: `${API_URL}/db/data/node/${targetNodeId}`,
+      to: `${getApiUrl()}/db/data/node/${targetNodeId}`,
       type: type
     }
     
@@ -211,8 +214,6 @@ export const relationshipApi = {
     if (properties) {
       relationshipData.data = properties
     }
-    
-    // 发送请求创建关系
     return apiClient.post(`/db/data/node/${sourceNodeId}/relationships`, relationshipData)
   },
   
@@ -412,4 +413,4 @@ export const propertyApi = {
   getAllPropertyKeys() {
     return apiClient.get('/db/data/propertykeys')
   }
-} 
+}
