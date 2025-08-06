@@ -88,7 +88,11 @@ const handleLogin = async () => {
     // 保存API地址到localStorage
     localStorage.setItem('apiUrl', loginForm.apiUrl)
 
-    const res = await userApi.login(loginForm)
+    // 只发送用户名和密码
+    const res = await userApi.login({
+      username: loginForm.username,
+      password: loginForm.password
+    })
 
     // 登录成功后保存token和用户名
     localStorage.setItem('token', 'logged-in') // 用于前端判断是否已登录
